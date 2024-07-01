@@ -16,7 +16,7 @@ export const VideoCall = () => {
 
   useEffect(() => {
     // Initializing WebSocket connection
-    socketRef.current = new WebSocket('https://peer-stream-backend.vercel.app/');
+    socketRef.current = new WebSocket('wss://peer-stream-backend.vercel.app/');
     const socket = socketRef.current;
 
     socket.onopen = () => {
