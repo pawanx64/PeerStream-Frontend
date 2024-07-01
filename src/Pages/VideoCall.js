@@ -16,7 +16,7 @@ export const VideoCall = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        socketRef.current = io('https://peer-stream-backend.vercel.app/');
+        socketRef.current = io('http://localhost:5000/');
         const socket = socketRef.current;
 
         socket.emit('join-room', { roomID });
@@ -114,7 +114,16 @@ export const VideoCall = () => {
 
     const closeConnection = () => {
         toast.info("Other user left the call, redirecting to home page!", {
-            position: toast.POSITION.TOP_CENTER,
+           
+                position: "top-center",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+            
         });
         cleanupCall();
         setTimeout(() => {
