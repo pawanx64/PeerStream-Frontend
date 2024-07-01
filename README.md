@@ -1,4 +1,4 @@
-# Peers Stream - Real Time Video Chat Application
+# Peer Stream - Real Time Video Chat Application
 
 ## Description
 This real-time video chat application is developed using WebRTC, Socket.io, Node.js, Express.js, and React.js.
