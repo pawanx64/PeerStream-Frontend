@@ -16,7 +16,7 @@ export const VideoCall = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        socketRef.current = io('https://peer-stream-backend.vercel.app/');
+        socketRef.current = io('http://localhost:5000/');
         const socket = socketRef.current;
 
         socket.emit('join-room', { roomID });
