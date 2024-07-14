@@ -9,6 +9,7 @@ export const VideoCall = () => {
     const { roomID } = useParams();
     const [localStream, setLocalStream] = useState(null);
     const [remoteStream, setRemoteStream] = useState(null);
+    const [screenStream, setScreenStream] = useState(null); // New state for screen sharing
     const peerConnection = useRef(null);
     const socketRef = useRef(null);
     const [isCameraOff, setIsCameraOff] = useState(false);
@@ -40,9 +41,12 @@ export const VideoCall = () => {
         socket.on('ice-candidate', handleNewICECandidateMsg);
         socket.on('leave-call', closeConnection);
 
+        // Get user media for video and audio
         navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
             setLocalStream(stream);
             setupPeerConnection(stream);
+        }).catch(error => {
+            console.error('Error accessing media devices:', error);
         });
 
         return () => {
@@ -103,6 +107,10 @@ export const VideoCall = () => {
             remoteStream.getTracks().forEach((track) => track.stop());
             setRemoteStream(null);
         }
+        if (screenStream) { // Clean up screen sharing stream
+            screenStream.getTracks().forEach((track) => track.stop());
+            setScreenStream(null);
+        }
         if (peerConnection.current) {
             peerConnection.current.close();
             peerConnection.current = null;
@@ -114,16 +122,14 @@ export const VideoCall = () => {
 
     const closeConnection = () => {
         toast.info("Other user left the call, redirecting to home page!", {
-           
-                position: "top-center",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-            
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
         });
         cleanupCall();
         setTimeout(() => {
@@ -167,48 +173,77 @@ export const VideoCall = () => {
         }
     };
 
-  return (
-    <div>
-      <div className="bg-gray-900 overflow-hidden text-white min-h-screen flex flex-col items-center justify-center relative">
-            <Draggable>
-                <div className="absolute top-4 left-4 z-10 cursor-move">
-                    <video className="w-96 h-60 rounded-3xl" autoPlay playsInline ref={video => {
-                        if (video) video.srcObject = localStream;
-                    }} />
+    const startScreenShare = () => {
+        navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then((stream) => {
+            setScreenStream(stream);
+            stream.getTracks().forEach((track) => {
+                peerConnection.current.addTrack(track, stream);
+            });
+        }).catch(error => {
+            console.error('Error accessing screen sharing:', error);
+        });
+    };
+
+    const stopScreenShare = () => {
+        if (screenStream) {
+            screenStream.getTracks().forEach((track) => track.stop());
+            setScreenStream(null);
+        }
+    };
+
+    return (
+        <div>
+            <div className="bg-gray-900 overflow-hidden text-white min-h-screen flex flex-col items-center justify-center relative">
+                <Draggable>
+                    <div className="absolute top-4 left-4 z-10 cursor-move">
+                        <video className="w-96 h-60 rounded-3xl" autoPlay playsInline ref={video => {
+                            if (video) video.srcObject = localStream;
+                        }} />
+                    </div>
+                </Draggable>
+
+                <div className="relative w-full max-w-4xl">
+                    {screenStream ? (
+                        <video className="w-full rounded-lg" autoPlay playsInline ref={video => {
+                            if (video) video.srcObject = screenStream;
+                        }} />
+                    ) : (
+                        <video className="w-full rounded-lg" autoPlay playsInline ref={video => {
+                            if (video) video.srcObject = remoteStream;
+                        }} />
+                    )}
+                    {!remoteStream && !screenStream && <p className="absolute inset-0 flex items-center justify-center text-lg">Start Call to connect with others in the room!</p>}
                 </div>
-            </Draggable>
 
-            <div className="relative w-full max-w-4xl">
-                <video className="w-full rounded-lg" autoPlay playsInline ref={video => {
-                    if (video) video.srcObject = remoteStream;
-                }} />
-                {!remoteStream && <p className="absolute inset-0 flex items-center justify-center text-lg">Start Call to connect with others in the room!</p>}
+                <div className="flex mt-4 space-x-4">
+                    {!remoteStream && !screenStream && <button onClick={callUser} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">Start Call</button>}
+                    {screenStream ? (
+                        <button onClick={stopScreenShare} className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded">Stop Sharing</button>
+                    ) : (
+                        <button onClick={startScreenShare} className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded">Share Screen</button>
+                    )}
+                    <button onClick={toggleCamera} className={`py-2 px-4 rounded ${isCameraOff ? "bg-gray-600" : "bg-red-500 hover:bg-red-600"}`}>
+                        {isCameraOff ? "Turn Camera On" : "Turn Camera Off"}
+                    </button>
+                    <button onClick={toggleMic} className={`py-2 px-4 rounded ${isMicMuted ? "bg-gray-600" : "bg-red-500 hover:bg-red-600"}`}>
+                        {isMicMuted ? "Unmute" : "Mute"}
+                    </button>
+                    <button onClick={leaveCall} className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded">End Call</button>
+                </div>
+                <ToastContainer
+                    position="top-center"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="light"
+                />
             </div>
 
-            <div className="flex mt-4 space-x-4">
-                {!remoteStream && <button onClick={callUser} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded">Start Call</button>}
-                <button onClick={toggleCamera} className={`py-2 px-4 rounded ${isCameraOff ? "bg-gray-600" : "bg-red-500 hover:bg-red-600"}`}>
-                    {isCameraOff ? "Turn Camera On" : "Turn Camera Off"}
-                </button>
-                <button onClick={toggleMic} className={`py-2 px-4 rounded ${isMicMuted ? "bg-gray-600" : "bg-red-500 hover:bg-red-600"}`}>
-                    {isMicMuted ? "Unmute" : "Mute"}
-                </button>
-                <button onClick={leaveCall} className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded">End Call</button>
-            </div>
-            <ToastContainer
-              position="top-center"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="light"
-              />
         </div>
-        
-    </div>
-  );
+    );
 };
