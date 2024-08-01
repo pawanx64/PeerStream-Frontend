@@ -2,26 +2,7 @@ import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export const NavBar = () => {
-  //const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [ID, setID] = useState("");
-
-  const handleEmailChange = (e) => {
-    setEmail(e.target.value);
-  };
-
-  const handleIDChange = (e) => {
-    setID(e.target.value);
-  };
-
-  const handleJoinRoom = () => {
-    if (ID && email) {
-      navigate(`/room/${ID}`);
-    } else {
-      alert("Please enter both Room ID and Email");
-    }
-  };
+  
 
   return (
     <div>

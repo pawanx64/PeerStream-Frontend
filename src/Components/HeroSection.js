@@ -1,12 +1,13 @@
-import React,{useState} from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer,toast } from 'react-toastify'
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import image1 from '../Assest/image2.webp'
+import image1 from '../Assest/image2.webp';
 
 export const HeroSection = () => {
   const [ID, setID] = useState("");
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
@@ -17,14 +18,18 @@ export const HeroSection = () => {
     setEmail(e.target.value);
   };
 
+  const handleNameChange = (e) => {
+    setName(e.target.value);
+  };
+
   const isValidEmail = (email) => {
     // Basic regex for email validation
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
   const handleClick = () => {
-    if (ID === "" || email === "") {
-      toast.error("Please Enter Room ID and Email", {
+    if (ID === "" || email === "" || name === "") {
+      toast.error("Please Enter Room ID, Email, and Name", {
         position: "top-center",
         autoClose: 5000,
         hideProgressBar: false,
@@ -34,8 +39,7 @@ export const HeroSection = () => {
         progress: undefined,
         theme: "light",
       });
-    }
-    else if (!isValidEmail(email)) { // Check if email is valid
+    } else if (!isValidEmail(email)) { // Check if email is valid
       toast.error("Please enter a valid email address", {
         position: "top-center",
         autoClose: 5000,
@@ -46,10 +50,8 @@ export const HeroSection = () => {
         progress: undefined,
         theme: "light",
       });
-    } 
-    else {
-      //setUser(email);
-      navigate(`/room/${ID}`, { state: { email } });
+    } else {
+      navigate(`/room/${ID}`, { state: { email, name } });
     }
   };
 
@@ -82,6 +84,14 @@ export const HeroSection = () => {
               onChange={handleEmailChange}
               value={email}
               name="email"
+            />
+            <input
+              className="w-full max-w-md p-3 mb-4 rounded border border-gray-700 bg-gray-800 text-white focus:outline-none"
+              type="text"
+              placeholder="Enter Your Name"
+              onChange={handleNameChange}
+              value={name}
+              name="name"
             />
             <button
               className="w-full max-w-md p-3 rounded bg-blue-500 hover:bg-blue-600 text-white font-semibold"
