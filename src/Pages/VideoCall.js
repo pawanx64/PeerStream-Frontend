@@ -190,9 +190,13 @@ export const VideoCall = () => {
       .getDisplayMedia({ video: true, audio: true })
       .then((stream) => {
         setScreenStream(stream);
-        stream
-          .getTracks()
-          .forEach((track) => peerConnection.current.addTrack(track, stream));
+        const sender = peerConnection.current
+          .getSenders()
+          .find((s) => s.track.kind === "video");
+        if (sender) {
+          sender.replaceTrack(stream.getVideoTracks()[0]);
+        }
+        stream.getVideoTracks()[0].onended = () => stopScreenShare();
         socketRef.current.emit("screen-share-started", { roomID });
       })
       .catch((error) => toast.error("Error accessing screen sharing:", error));
@@ -202,6 +206,12 @@ export const VideoCall = () => {
     if (screenStream) {
       screenStream.getTracks().forEach((track) => track.stop());
       setScreenStream(null);
+      const sender = peerConnection.current
+        .getSenders()
+        .find((s) => s.track.kind === "video");
+      if (sender) {
+        sender.replaceTrack(localStream.getVideoTracks()[0]);
+      }
       socketRef.current.emit("screen-share-stopped", { roomID });
     }
   };
@@ -215,8 +225,10 @@ export const VideoCall = () => {
     }
   }, [newMessage, roomID, name]);
 
+  
   return (
     <div className="relative bg-gradient-to-r from-gray-800 via-gray-900 to-black min-h-screen flex flex-col items-center justify-center p-6">
+      {/*Video Element*/}
       <div className="relative w-full max-w-4xl mb-8">
         <Draggable>
           <div className="absolute top-4 left-4 z-10 cursor-move shadow-lg rounded-lg overflow-hidden">
@@ -249,6 +261,8 @@ export const VideoCall = () => {
           )}
         </div>
       </div>
+
+      {/* Screen Sharing */}
 
       <div className="flex flex-wrap gap-4 mb-8">
         {!remoteStream && !screenStream && (
@@ -304,6 +318,7 @@ export const VideoCall = () => {
         </button>
       </div>
 
+      {/* Chat Panel */}
       <div
         className={`fixed top-0 right-0 w-80 bg-gray-800 rounded-l-lg shadow-lg p-4 transform ${
           isChatPanelOpen ? "translate-x-0" : "translate-x-full"
