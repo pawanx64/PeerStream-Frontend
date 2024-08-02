@@ -38,7 +38,7 @@ This real-time video chat application is developed using WebRTC, Socket.io, Node
 
 ## Working Demo
 
-https://github.com/pawanx64/PeerStream-Frontend/assets/114975059/e9d362a3-ab33-4f99-b197-b37557647431
+
 
 ## My Learnings
 
